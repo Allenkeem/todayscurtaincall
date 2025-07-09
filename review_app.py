@@ -8,13 +8,15 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Google Sheet 연결 함수
 # ─────────────────────
 def connect_to_sheet():
+    import gspread
+    from oauth2client.service_account import ServiceAccountCredentials
+
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        "theater-review-8c2d6c3031be.json", scope
-    )
+    creds_dict = st.secrets["gcp_service_account"]
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
     client = gspread.authorize(creds)
     sheet = client.open("theater_reviews").sheet1
     return sheet
