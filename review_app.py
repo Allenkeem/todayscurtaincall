@@ -147,7 +147,7 @@ with tab3:
                 with col2:
                     if st.button("🗑️ 리뷰 삭제"):
                         try:
-                            sheet.delete_row(sheet_row_num)
+                            sheet.delete_rows(sheet_row_num)
                             st.success("❌ 리뷰가 Google Sheet에서 삭제되었습니다!")
                         except Exception as e:
                             st.error(f"삭제 실패: {e}")
