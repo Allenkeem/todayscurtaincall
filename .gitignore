@@ -1,1 +1,2 @@
-theater-review-*.json 
+theater-review-*.json
+.streamlit/secrets.toml
