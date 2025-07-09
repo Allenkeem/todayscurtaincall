@@ -123,13 +123,13 @@ with tab3:
                 new_date = st.date_input("관람일", value=pd.to_datetime(selected_review["관람일"]))
                 new_rating = st.slider("별점", 0, 5, step=1, value=int(selected_review["별점"]))
 
-                q1 = st.text_area("1. 한줄평", value=selected_review["한줄평"])
-                q2 = st.text_area("2. 기억에 남는 장면/인물", value=selected_review["기억에 남는 장면/인물"])
-                q3 = st.text_area("3. 배우 연기", value=selected_review["배우 연기"])
-                q4 = st.text_area("4. 무대/연출/음향", value=selected_review["무대/연출/음향"])
-                q5 = st.text_area("5. 스토리/대본", value=selected_review["스토리/대본"])
-                q6 = st.text_area("6. 메시지/주제", value=selected_review["메시지/주제"])
-                q7 = st.text_area("7. 전체 소감", value=selected_review["전체 소감"])
+                q1 = st.text_area("1. 한줄평 - 공연을 한 문장으로 표현한다면?", value=selected_review["한줄평"])
+                q2 = st.text_area("2. 기억에 남는 장면이나 인물은?", value=selected_review["기억에 남는 장면/인물"])
+                q3 = st.text_area("3. 배우들의 연기는 어땠나요?", value=selected_review["배우 연기"])
+                q4 = st.text_area("4. 무대 연출/조명/음악 등 시각·청각적 요소는 어땠나요?", value=selected_review["무대/연출/음향"])
+                q5 = st.text_area("5. 스토리 구성과 대본은 어땠나요?", value=selected_review["스토리/대본"])
+                q6 = st.text_area("6. 이 공연이 전하려는 메시지나 주제를 어떻게 느꼈나요?", value=selected_review["메시지/주제"])
+                q7 = st.text_area("7. 전체적인 감상 소감", value=selected_review["전체 소감"])
 
                 col1, col2 = st.columns(2)
                 with col1:
