@@ -55,7 +55,7 @@ with tab1:
                         nickname, title, str(watch_date), rating,
                         q1, q2, q3, q4, q5, q6, q7
                     ])
-                    st.success("✅ 리뷰가 Google Sheet에 저장되었습니다!")
+                    st.success("✅ 리뷰가 저장소에 저장되었습니다!")
                 except Exception as e:
                     st.error(f"❌ 저장 중 오류 발생: {e}")
 
@@ -93,7 +93,7 @@ with tab2:
 # 탭 3: Google Sheet 기반 수정/삭제
 # ─────────────────────
 with tab3:
-    st.header("🛠 Google Sheet에서 리뷰 수정 또는 삭제")
+    st.header("🛠 리뷰 수정 또는 삭제")
 
     try:
         sheet = connect_to_sheet()
@@ -140,7 +140,7 @@ with tab3:
                                 [[nickname, new_title, str(new_date), new_rating,
                                   q1, q2, q3, q4, q5, q6, q7]]
                             )
-                            st.success("✅ Google Sheet에 리뷰 수정 완료!")
+                            st.success("✅ 저장소에 리뷰 수정 완료!")
                         except Exception as e:
                             st.error(f"수정 실패: {e}")
 
@@ -148,9 +148,9 @@ with tab3:
                     if st.button("🗑️ 리뷰 삭제"):
                         try:
                             sheet.delete_rows(sheet_row_num)
-                            st.success("❌ 리뷰가 Google Sheet에서 삭제되었습니다!")
+                            st.success("❌ 리뷰가 저장소에서 삭제되었습니다!")
                         except Exception as e:
                             st.error(f"삭제 실패: {e}")
 
     except Exception as e:
-        st.error(f"❌ Google Sheet 접근 실패: {e}")
+        st.error(f"❌ 저장소 접근 실패: {e}")
