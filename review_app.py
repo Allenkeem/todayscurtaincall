@@ -105,7 +105,7 @@ with tab2:
                 
                 with count_col:
                     st.markdown(
-                        f"<div style='text-align:left; font-size:20px;'>👍 <b>{int(row.get('좋아요', 0) or 0)}</b>명 공감했어요</div>",
+                        f"<button style='background-color:#fff0f5; border:none; font-size:16px;'>❤️ 좋아요 {int(row.get('좋아요', 0) or 0)}</button>",
                         unsafe_allow_html=True
                     )
 
