@@ -81,7 +81,8 @@ with tab2:
         st.markdown(f"⭐ **평균 별점:** `{filtered['별점'].mean():.2f}` / 5")
 
         for idx, row in filtered.iterrows():
-            expander_title = f"⭐ {row['별점']} | **{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
+            likes = int(row.get("좋아요", 0) or 0)
+            expander_title = f"⭐ {row['별점']} | ❤️ {likes} | **{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
             with st.expander(expander_title):
                 st.markdown(f"**1. 한줄평**\n{row['한줄평']}")
                 st.markdown(f"**2. 기억에 남는 장면/인물**\n{row['기억에 남는 장면/인물']}")
