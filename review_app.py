@@ -104,7 +104,10 @@ with tab2:
                             st.error(f"좋아요 실패: {e}")
                 
                 with count_col:
-                    st.markdown(f"<span style='font-size:18px;'>❤️ 공감 수: <strong>{int(row.get('좋아요', 0) or 0)}</strong></span>", unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div style='text-align:left; font-size:20px;'>👍 <b>{int(row.get('좋아요', 0) or 0)}</b>명 공감했어요</div>",
+                        unsafe_allow_html=True
+                    )
 
 
     except Exception as e:
