@@ -94,16 +94,18 @@ with tab2:
                 # 현재 좋아요 수 표시 및 버튼
                 like_col, count_col = st.columns([1, 5])
                 with like_col:
-                    if st.button("👍 공감해요", key=f"like_{idx}"):
+                    if st.button("👍 좋아요", key=f"like_{idx}"):
                         try:
-                            sheet_row = df.index.get_loc(idx) + 2  # +2 for header
+                            sheet_row = df.index.get_loc(idx) + 2
                             current_likes = int(row.get("좋아요", 0) or 0)
                             sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, current_likes + 1)
                             st.rerun()
                         except Exception as e:
                             st.error(f"좋아요 실패: {e}")
+                
                 with count_col:
-                    st.markdown(f"**공감 수:** {row.get('좋아요', 0)}")
+                    st.markdown(f"<span style='font-size:18px;'>❤️ 공감 수: <strong>{int(row.get('좋아요', 0) or 0)}</strong></span>", unsafe_allow_html=True)
+
 
     except Exception as e:
         st.error(f"❌ 리뷰 불러오기 실패: {e}")
