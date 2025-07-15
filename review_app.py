@@ -40,22 +40,19 @@ def render_comment_box(comment):
 
     st.markdown(f"""
         <div style="{container_style}">
-            <div style='display: flex; justify-content: space-between; align-items: center;'>
-                <p style='margin: 0; font-size: 16px;'>💬 <strong>{comment['댓글 닉네임']}</strong>
-                <span style='color: gray; font-size: 14px;'>({comment['작성일']})</span></p>
-                <div>
-                    <button onclick="document.getElementById('edit_{comment.name}').click();" style='font-size: 13px; padding: 4px 10px; margin-right: 5px;'>✏️ 수정</button>
-                    <button onclick="document.getElementById('delete_{comment.name}').click();" style='font-size: 13px; padding: 4px 10px;'>🗑 삭제</button>
-                </div>
-            </div>
+            <p style='margin: 0; font-size: 16px;'>💬 <strong>{comment['댓글 닉네임']}</strong>
+            <span style='color: gray; font-size: 14px;'>({comment['작성일']})</span></p>
             <p style='margin-top: 8px;'>{comment['댓글 내용'].replace('\n', '<br>')}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    if st.button("수정", key=f"edit_{comment.name}", help="수정 버튼 트리거", args=()):
-        st.session_state[f"edit_mode_{comment.name}"] = True
-    if st.button("삭제", key=f"delete_{comment.name}", help="삭제 버튼 트리거", args=()):
-        st.session_state[f"delete_confirm_{comment.name}"] = True
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("✏️ 수정", key=f"edit_{comment.name}"):
+            st.session_state[f"edit_mode_{comment.name}"] = True
+    with col2:
+        if st.button("🗑 삭제", key=f"delete_{comment.name}"):
+            st.session_state[f"delete_confirm_{comment.name}"] = True
 
     # 수정 모드
     if st.session_state.get(f"edit_mode_{comment.name}"):
