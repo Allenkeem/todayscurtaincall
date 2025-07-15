@@ -8,9 +8,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Google Sheet 연결 함수
 # ─────────────────────
 def connect_to_sheet():
-    import gspread
-    from oauth2client.service_account import ServiceAccountCredentials
-
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
@@ -18,8 +15,8 @@ def connect_to_sheet():
     creds_dict = st.secrets["gcp_service_account"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
     client = gspread.authorize(creds)
-    sheet = client.open("theater_reviews").sheet1
-    return sheet
+    sheet = client.open("theater_reviews").worksheet("theater_reviews")  # 시트 이름 명시
+    return client, sheet
 
 def get_or_create_comment_sheet(client):
     try:
@@ -58,7 +55,7 @@ with tab1:
                 st.warning("닉네임과 공연 제목은 필수입니다!")
             else:
                 try:
-                    sheet = connect_to_sheet()
+                    client, sheet = connect_to_sheet()
                     sheet.append_row([
                         nickname, title, str(watch_date), rating,
                         q1, q2, q3, q4, q5, q6, q7
@@ -74,7 +71,7 @@ with tab2:
     st.header("🎭 연극별 리뷰 보기")
     try:
         # 1. 시트 연결 및 데이터 불러오기
-        client = connect_to_sheet()
+        client, sheet = connect_to_sheet()
         sheet = client.open("theater_reviews").worksheet("theater_reviews")  # 시트 이름 맞게 수정
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
@@ -183,7 +180,7 @@ with tab3:
     st.header("🛠 리뷰 수정 또는 삭제")
 
     try:
-        sheet = connect_to_sheet()
+        client, sheet = connect_to_sheet()
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
 
