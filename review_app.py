@@ -41,8 +41,8 @@ def render_comment_box(comment):
 
     button_html = f"""
         <div style='position: absolute; top: 10px; right: 10px;'>
-            <button onclick=\"document.getElementById('edit_{comment.name}').click();\" style='font-size: 12px; padding: 3px 8px; margin-right: 4px;'>✏️ 수정</button>
-            <button onclick=\"document.getElementById('delete_{comment.name}').click();\" style='font-size: 12px; padding: 3px 8px;'>🗑 삭제</button>
+            <button onclick=\"document.getElementById('edit_{comment.name}').click();\" style='font-size: 11px; padding: 4px 10px; margin-right: 4px;'>✏️ 수정</button>
+            <button onclick=\"document.getElementById('delete_{comment.name}').click();\" style='font-size: 11px; padding: 4px 10px;'>🗑 삭제</button>
         </div>
     """
 
@@ -55,10 +55,9 @@ def render_comment_box(comment):
         </div>
     """, unsafe_allow_html=True)
 
-    if st.button("수정", key=f"edit_{comment.name}", help="수정 버튼 트리거"):
-        st.session_state[f"edit_mode_{comment.name}"] = True
-    if st.button("삭제", key=f"delete_{comment.name}", help="삭제 버튼 트리거"):
-        st.session_state[f"delete_confirm_{comment.name}"] = True
+    # 숨겨진 버튼 (JS 클릭용)
+    st.button("수정", key=f"edit_{comment.name}", help="수정 버튼 트리거", type="primary", use_container_width=True)
+    st.button("삭제", key=f"delete_{comment.name}", help="삭제 버튼 트리거", type="primary", use_container_width=True)
 
     # 수정 모드
     if st.session_state.get(f"edit_mode_{comment.name}"):
