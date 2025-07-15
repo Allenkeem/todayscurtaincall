@@ -33,7 +33,7 @@ with tab1:
         nickname = st.text_input("닉네임", max_chars=15)
         title = st.text_input("공연 제목")
         watch_date = st.date_input("관람일", value=date.today())
-        rating = st.slider("별점 (0~5)", 0, 5, step=1)
+        rating = st.slider("별점 (0~5)", 0.0, 5.0, step=0.5)
 
         q1 = st.text_area("1. 한줄평 - 공연을 한 문장으로 표현한다면?")
         q2 = st.text_area("2. 기억에 남는 장면이나 인물은?")
@@ -121,7 +121,7 @@ with tab3:
                 # 기존 값 입력 폼에 채우기
                 new_title = st.text_input("공연 제목", value=selected_review["공연 제목"])
                 new_date = st.date_input("관람일", value=pd.to_datetime(selected_review["관람일"]))
-                new_rating = st.slider("별점", 0, 5, step=1, value=int(selected_review["별점"]))
+                new_rating = st.slider("별점", 0.0, 5.0, step=0.5, value=float(selected_review["별점"]))
 
                 q1 = st.text_area("1. 한줄평 - 공연을 한 문장으로 표현한다면?", value=selected_review["한줄평"])
                 q2 = st.text_area("2. 기억에 남는 장면이나 인물은?", value=selected_review["기억에 남는 장면/인물"])
