@@ -30,27 +30,31 @@ def get_or_create_comment_sheet(client):
 # 댓글 UI 박스 함수
 # ─────────────────────
 def render_comment_box(comment):
-    with st.container():
-        st.markdown("""
-            <div style='border: 1px solid #ddd; border-radius: 10px; padding: 10px; margin-top: 10px; background-color: #fafafa;'>
-                <p style='margin: 0; font-size: 16px;'>💬 <strong>{닉네임}</strong> <span style='color: gray; font-size: 14px;'>({작성일})</span></p>
-                <p style='margin: 5px 0 10px 0;'>{내용}</p>
-        """.format(
-            닉네임=comment["댓글 닉네임"],
-            작성일=comment["작성일"],
-            내용=comment["댓글 내용"].replace("\n", "<br>")
-        ), unsafe_allow_html=True)
+    container_style = """
+        background-color: #f9f9f9;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        border: 1px solid #e0e0e0;
+    """
 
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            if st.button("✏️ 수정", key=f"edit_{comment.name}"):
-                st.session_state[f"edit_mode_{comment.name}"] = True
-        with col2:
-            if st.button("🗑 삭제", key=f"delete_{comment.name}"):
-                st.session_state[f"delete_confirm_{comment.name}"] = True
+    st.markdown(f"""
+        <div style="{container_style}">
+            <p style='margin: 0; font-size: 16px;'>💬 <strong>{comment['댓글 닉네임']}</strong>
+            <span style='color: gray; font-size: 14px;'>({comment['작성일']})</span></p>
+            <p style='margin-top: 8px;'>{comment['댓글 내용'].replace('\n', '<br>')}</p>
+        </div>
+    """, unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("✏️ 수정", key=f"edit_{comment.name}"):
+            st.session_state[f"edit_mode_{comment.name}"] = True
+    with col2:
+        if st.button("🗑 삭제", key=f"delete_{comment.name}"):
+            st.session_state[f"delete_confirm_{comment.name}"] = True
 
+    # 수정 모드
     if st.session_state.get(f"edit_mode_{comment.name}"):
         with st.form(f"edit_form_{comment.name}"):
             new_text = st.text_area("댓글 수정", value=comment["댓글 내용"], key=f"edit_text_{comment.name}")
@@ -67,6 +71,7 @@ def render_comment_box(comment):
                 except Exception as e:
                     st.error(f"❌ 댓글 수정 실패: {e}")
 
+    # 삭제 모드
     if st.session_state.get(f"delete_confirm_{comment.name}"):
         if st.button("정말 삭제할까요? (되돌릴 수 없음)", key=f"confirm_delete_{comment.name}"):
             try:
