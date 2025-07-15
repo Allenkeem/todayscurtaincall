@@ -75,7 +75,6 @@ with tab2:
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
 
-        # 좋아요 열이 없으면 추가
         if "좋아요" not in df.columns:
             df["좋아요"] = 0
 
@@ -83,9 +82,7 @@ with tab2:
         comment_sheet = get_or_create_comment_sheet(client)
         comment_records = comment_sheet.get_all_records()
         comment_df = pd.DataFrame(comment_records)
-        comment_df.columns = [c.strip() for c in comment_df.columns]  # 공백 제거
 
-        # 공연 제목 선택
         play_titles = df["공연 제목"].dropna().unique()
         selected_title = st.selectbox("공연을 선택하세요", play_titles)
 
@@ -93,13 +90,10 @@ with tab2:
         st.markdown(f"### 📄 '{selected_title}'에 대한 리뷰 ({len(filtered)}개)")
         st.markdown(f"⭐ **평균 별점:** `{filtered['별점'].mean():.2f}` / 5")
 
-        # 리뷰 반복 출력
         for idx, row in filtered.iterrows():
             likes = int(row.get("좋아요", 0) or 0)
             expander_title = f"⭐ {row['별점']} | ❤️ {likes} | **{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
-
             with st.expander(expander_title):
-                # 리뷰 본문
                 st.markdown(f"**1. 한줄평**\n{row['한줄평']}")
                 st.markdown(f"**2. 기억에 남는 장면/인물**\n{row['기억에 남는 장면/인물']}")
                 st.markdown(f"**3. 배우 연기**\n{row['배우 연기']}")
@@ -108,12 +102,12 @@ with tab2:
                 st.markdown(f"**6. 메시지/주제**\n{row['메시지/주제']}")
                 st.markdown(f"**7. 전체 소감**\n{row['전체 소감']}")
 
-                # 좋아요 버튼 + 수
+                # 좋아요
                 like_col, count_col = st.columns([1, 5])
                 with like_col:
                     if st.button("❤️ 좋아요", key=f"like_{idx}"):
                         try:
-                            sheet_row = df.index.get_loc(idx) + 2  # header 제외 + 1-based
+                            sheet_row = df.index.get_loc(idx) + 2
                             sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, likes + 1)
                             st.rerun()
                         except Exception as e:
@@ -124,26 +118,48 @@ with tab2:
                         unsafe_allow_html=True
                     )
 
-                # 🔽 댓글 표시
+                # 댓글 출력
                 st.markdown("#### 💬 댓글")
                 review_key = (row["공연 제목"], row["닉네임"], row["관람일"])
-                try:
-                    review_comments = comment_df[
-                        (comment_df["공연 제목"] == review_key[0]) &
-                        (comment_df["리뷰 닉네임"] == review_key[1]) &
-                        (comment_df["관람일"] == review_key[2])
-                    ]
-                except KeyError as e:
-                    st.error(f"댓글 불러오기 실패: {e}")
-                    review_comments = pd.DataFrame()
+                review_comments = comment_df[
+                    (comment_df["공연 제목"] == review_key[0]) &
+                    (comment_df["리뷰 닉네임"] == review_key[1]) &
+                    (comment_df["관람일"] == review_key[2])
+                ]
 
                 if not review_comments.empty:
-                    for _, c in review_comments.iterrows():
+                    for c_idx, c in review_comments.iterrows():
                         st.markdown(f"🗨️ **{c['댓글 닉네임']}** ({c['작성일']})  \n{c['댓글 내용']}")
+
+                        # 수정/삭제 버튼
+                        edit_col, delete_col = st.columns([1, 1])
+                        with edit_col:
+                            if st.button("✏️ 수정", key=f"edit_{idx}_{c_idx}"):
+                                with st.form(f"edit_form_{idx}_{c_idx}"):
+                                    new_text = st.text_area("댓글 수정", value=c["댓글 내용"])
+                                    confirm = st.form_submit_button("수정 완료")
+                                    if confirm:
+                                        try:
+                                            row_num = comment_df.index.get_loc(c_idx) + 2
+                                            comment_sheet.update_cell(row_num, comment_df.columns.get_loc("댓글 내용") + 1, new_text)
+                                            st.success("✅ 댓글이 수정되었습니다!")
+                                            st.rerun()
+                                        except Exception as e:
+                                            st.error(f"❌ 댓글 수정 실패: {e}")
+
+                        with delete_col:
+                            if st.button("🗑 삭제", key=f"delete_{idx}_{c_idx}"):
+                                try:
+                                    row_num = comment_df.index.get_loc(c_idx) + 2
+                                    comment_sheet.delete_rows(row_num)
+                                    st.success("🗑 댓글이 삭제되었습니다!")
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error(f"❌ 댓글 삭제 실패: {e}")
                 else:
                     st.markdown("*아직 댓글이 없습니다.*")
 
-                # 🔽 댓글 작성 폼
+                # 댓글 입력 폼
                 with st.form(f"댓글폼_{idx}"):
                     comment_nick = st.text_input("닉네임", key=f"comment_nick_{idx}")
                     comment_text = st.text_area("댓글 내용", key=f"comment_text_{idx}")
@@ -166,7 +182,6 @@ with tab2:
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"❌ 댓글 저장 실패: {e}")
-
     except Exception as e:
         st.error(f"❌ 리뷰 불러오기 실패: {e}")
 
