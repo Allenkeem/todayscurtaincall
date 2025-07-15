@@ -99,7 +99,7 @@ with tab2:
                             sheet_row = df.index.get_loc(idx) + 2  # +2 for header
                             current_likes = int(row.get("좋아요", 0) or 0)
                             sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, current_likes + 1)
-                            st.experimental_rerun()
+                            st.rerun()
                         except Exception as e:
                             st.error(f"좋아요 실패: {e}")
                 with count_col:
