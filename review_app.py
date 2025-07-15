@@ -36,28 +36,26 @@ def render_comment_box(comment):
         padding: 15px;
         margin-bottom: 12px;
         border: 1px solid #e0e0e0;
-        position: relative;
-    """
-
-    button_html = f"""
-        <div style='position: absolute; top: 10px; right: 10px;'>
-            <button onclick=\"document.getElementById('edit_{comment.name}').click();\" style='font-size: 11px; padding: 4px 10px; margin-right: 4px;'>✏️ 수정</button>
-            <button onclick=\"document.getElementById('delete_{comment.name}').click();\" style='font-size: 11px; padding: 4px 10px;'>🗑 삭제</button>
-        </div>
     """
 
     st.markdown(f"""
         <div style="{container_style}">
-            {button_html}
-            <p style='margin: 0; font-size: 16px;'>💬 <strong>{comment['댓글 닉네임']}</strong>
-            <span style='color: gray; font-size: 14px;'>({comment['작성일']})</span></p>
+            <div style='display: flex; justify-content: space-between; align-items: center;'>
+                <p style='margin: 0; font-size: 16px;'>💬 <strong>{comment['댓글 닉네임']}</strong>
+                <span style='color: gray; font-size: 14px;'>({comment['작성일']})</span></p>
+                <div>
+                    <button onclick="document.getElementById('edit_{comment.name}').click();" style='font-size: 13px; padding: 4px 10px; margin-right: 5px;'>✏️ 수정</button>
+                    <button onclick="document.getElementById('delete_{comment.name}').click();" style='font-size: 13px; padding: 4px 10px;'>🗑 삭제</button>
+                </div>
+            </div>
             <p style='margin-top: 8px;'>{comment['댓글 내용'].replace('\n', '<br>')}</p>
         </div>
     """, unsafe_allow_html=True)
 
-    # 숨겨진 버튼 (JS 클릭용)
-    st.button("수정", key=f"edit_{comment.name}", help="수정 버튼 트리거", type="primary", use_container_width=True)
-    st.button("삭제", key=f"delete_{comment.name}", help="삭제 버튼 트리거", type="primary", use_container_width=True)
+    if st.button("수정", key=f"edit_{comment.name}", help="수정 버튼 트리거", args=()):
+        st.session_state[f"edit_mode_{comment.name}"] = True
+    if st.button("삭제", key=f"delete_{comment.name}", help="삭제 버튼 트리거", args=()):
+        st.session_state[f"delete_confirm_{comment.name}"] = True
 
     # 수정 모드
     if st.session_state.get(f"edit_mode_{comment.name}"):
