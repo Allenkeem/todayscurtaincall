@@ -26,6 +26,43 @@ def get_or_create_comment_sheet(client):
         ws.append_row(["공연 제목", "리뷰 닉네임", "관람일", "댓글 닉네임", "댓글 내용", "작성일"])
         return ws
 
+def render_comment_with_actions(comment, idx, comment_sheet):
+    comment_id = f"{comment['공연 제목']}_{comment['리뷰 닉네임']}_{comment['관람일']}_{comment['댓글 닉네임']}_{idx}"
+
+    st.markdown(
+        f"""
+        <div style="background-color:#f9f9f9; border:1px solid #ddd; border-radius:8px; padding:10px; margin-bottom:10px;">
+            <div style="font-weight:bold; color:#333;">💬 {comment['댓글 닉네임']} <span style="font-size:12px; color:#888;">({comment['작성일']})</span></div>
+            <div style="margin-top:5px; color:#444;">{comment['댓글 내용']}</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.button("✏️ 수정", key=f"edit_{comment_id}"):
+            with st.form(f"edit_form_{comment_id}"):
+                new_text = st.text_area("댓글 수정", value=comment["댓글 내용"], key=f"edit_text_{comment_id}")
+                if st.form_submit_button("💾 수정 저장"):
+                    try:
+                        row_idx = idx + 2  # header 제외
+                        comment_sheet.update_cell(row_idx, 5, new_text)
+                        st.success("✅ 댓글이 수정되었습니다!")
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"수정 실패: {e}")
+
+    with col2:
+        if st.button("🗑️ 삭제", key=f"delete_{comment_id}"):
+            try:
+                row_idx = idx + 2
+                comment_sheet.delete_rows(row_idx)
+                st.success("🗑️ 댓글이 삭제되었습니다!")
+                st.rerun()
+            except Exception as e:
+                st.error(f"삭제 실패: {e}")
+
 # ─────────────────────
 # 리뷰 작성 탭
 # ─────────────────────
@@ -138,8 +175,8 @@ with tab2:
                     review_comments = pd.DataFrame()
 
                 if not review_comments.empty:
-                    for _, c in review_comments.iterrows():
-                        st.markdown(f"🗨️ **{c['댓글 닉네임']}** ({c['작성일']})  \n{c['댓글 내용']}")
+                    for i, c in review_comments.iterrows():
+                        render_comment_with_actions(c, i, comment_sheet)
                 else:
                     st.markdown("*아직 댓글이 없습니다.*")
 
