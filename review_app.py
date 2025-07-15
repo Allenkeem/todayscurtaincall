@@ -69,10 +69,14 @@ with tab2:
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
 
+        # 좋아요 열이 없으면 0으로 채움
+        if "좋아요" not in df.columns:
+            df["좋아요"] = 0
+
         play_titles = df["공연 제목"].dropna().unique()
         selected_title = st.selectbox("공연을 선택하세요", play_titles)
 
-        filtered = df[df["공연 제목"] == selected_title]
+        filtered = df[df["공연 제목"] == selected_title].copy()
         st.markdown(f"### 📄 '{selected_title}'에 대한 리뷰 ({len(filtered)}개)")
         st.markdown(f"⭐ **평균 별점:** `{filtered['별점'].mean():.2f}` / 5")
 
@@ -86,6 +90,21 @@ with tab2:
                 st.markdown(f"**5. 스토리/대본**\n{row['스토리/대본']}")
                 st.markdown(f"**6. 메시지/주제**\n{row['메시지/주제']}")
                 st.markdown(f"**7. 전체 소감**\n{row['전체 소감']}")
+
+                # 현재 좋아요 수 표시 및 버튼
+                like_col, count_col = st.columns([1, 5])
+                with like_col:
+                    if st.button("👍 공감해요", key=f"like_{idx}"):
+                        try:
+                            sheet_row = df.index.get_loc(idx) + 2  # +2 for sheet row number
+                            current_likes = int(row.get("좋아요", 0))
+                            sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, current_likes + 1)
+                            st.experimental_rerun()
+                        except Exception as e:
+                            st.error(f"좋아요 실패: {e}")
+                with count_col:
+                    st.markdown(f"**공감 수:** {row.get('좋아요', 0)}")
+
     except Exception as e:
         st.error(f"❌ 리뷰 불러오기 실패: {e}")
 
