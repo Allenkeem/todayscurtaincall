@@ -94,7 +94,7 @@ with tab2:
                 # 현재 좋아요 수 표시 및 버튼
                 like_col, count_col = st.columns([1, 5])
                 with like_col:
-                    if st.button("👍 좋아요", key=f"like_{idx}"):
+                    if st.button("❤️ 좋아요", key=f"like_{idx}"):
                         try:
                             sheet_row = df.index.get_loc(idx) + 2
                             current_likes = int(row.get("좋아요", 0) or 0)
