@@ -8,6 +8,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 # Google Sheet 연결 함수
 # ─────────────────────
 def connect_to_sheet():
+    import gspread
+    from oauth2client.service_account import ServiceAccountCredentials
+
     scope = [
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/drive"
@@ -15,16 +18,8 @@ def connect_to_sheet():
     creds_dict = st.secrets["gcp_service_account"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(creds_dict), scope)
     client = gspread.authorize(creds)
-    sheet = client.open("theater_reviews").worksheet("theater_reviews")  # 시트 이름 명시
-    return client, sheet
-
-def get_or_create_comment_sheet(client):
-    try:
-        return client.open("theater_reviews").worksheet("comments")
-    except gspread.exceptions.WorksheetNotFound:
-        ws = client.open("theater_reviews").add_worksheet(title="comments", rows="1000", cols="6")
-        ws.append_row(["공연 제목", "리뷰 닉네임", "관람일", "댓글 닉네임", "댓글 내용", "작성일"])
-        return ws
+    sheet = client.open("theater_reviews").sheet1
+    return sheet
 
 # ─────────────────────
 # 리뷰 작성 탭
@@ -55,7 +50,7 @@ with tab1:
                 st.warning("닉네임과 공연 제목은 필수입니다!")
             else:
                 try:
-                    client, sheet = connect_to_sheet()
+                    sheet = connect_to_sheet()
                     sheet.append_row([
                         nickname, title, str(watch_date), rating,
                         q1, q2, q3, q4, q5, q6, q7
@@ -70,30 +65,14 @@ with tab1:
 with tab2:
     st.header("🎭 연극별 리뷰 보기")
     try:
-        # 1. 시트 연결 및 데이터 불러오기
-        client, sheet = connect_to_sheet()
-        sheet = client.open("theater_reviews").worksheet("theater_reviews")  # 시트 이름 맞게 수정
+        sheet = connect_to_sheet()
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
 
-        # 2. 좋아요 열 초기화
+        # 좋아요 열이 없으면 0으로 채움
         if "좋아요" not in df.columns:
             df["좋아요"] = 0
 
-        # 3. 댓글 시트 준비
-        def get_or_create_comment_sheet(client):
-            try:
-                return client.open("theater_reviews").worksheet("comments")
-            except gspread.exceptions.WorksheetNotFound:
-                ws = client.open("theater_reviews").add_worksheet(title="comments", rows="1000", cols="6")
-                ws.append_row(["공연 제목", "리뷰 닉네임", "관람일", "댓글 닉네임", "댓글 내용", "작성일"])
-                return ws
-
-        comment_sheet = get_or_create_comment_sheet(client)
-        comment_records = comment_sheet.get_all_records()
-        comment_df = pd.DataFrame(comment_records)
-
-        # 4. 공연 제목 선택
         play_titles = df["공연 제목"].dropna().unique()
         selected_title = st.selectbox("공연을 선택하세요", play_titles)
 
@@ -101,13 +80,10 @@ with tab2:
         st.markdown(f"### 📄 '{selected_title}'에 대한 리뷰 ({len(filtered)}개)")
         st.markdown(f"⭐ **평균 별점:** `{filtered['별점'].mean():.2f}` / 5")
 
-        # 5. 각 리뷰 출력
         for idx, row in filtered.iterrows():
             likes = int(row.get("좋아요", 0) or 0)
             expander_title = f"⭐ {row['별점']} | ❤️ {likes} | **{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
-
             with st.expander(expander_title):
-                # 리뷰 본문 출력
                 st.markdown(f"**1. 한줄평**\n{row['한줄평']}")
                 st.markdown(f"**2. 기억에 남는 장면/인물**\n{row['기억에 남는 장면/인물']}")
                 st.markdown(f"**3. 배우 연기**\n{row['배우 연기']}")
@@ -116,60 +92,25 @@ with tab2:
                 st.markdown(f"**6. 메시지/주제**\n{row['메시지/주제']}")
                 st.markdown(f"**7. 전체 소감**\n{row['전체 소감']}")
 
-                # 좋아요 버튼 + 카운터
+                # 현재 좋아요 수 표시 및 버튼
                 like_col, count_col = st.columns([1, 5])
                 with like_col:
                     if st.button("❤️ 좋아요", key=f"like_{idx}"):
                         try:
-                            sheet_row = df.index.get_loc(idx) + 2  # +2: 헤더 제외 + 1-based
-                            sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, likes + 1)
+                            sheet_row = df.index.get_loc(idx) + 2
+                            current_likes = int(row.get("좋아요", 0) or 0)
+                            sheet.update_cell(sheet_row, df.columns.get_loc("좋아요") + 1, current_likes + 1)
                             st.rerun()
                         except Exception as e:
                             st.error(f"좋아요 실패: {e}")
+                
                 with count_col:
                     st.markdown(
-                        f"<button style='background-color:#fff0f5; border:none; font-size:16px;'>❤️ {likes}번 좋아했어요</button>",
+                        f"<button style='background-color:#fff0f5; border:none; font-size:16px;'>❤️ {int(row.get('좋아요', 0) or 0)}번 좋아했어요</button>",
                         unsafe_allow_html=True
                     )
 
-                # 댓글 출력
-                st.markdown("#### 💬 댓글")
-                review_key = (row["공연 제목"], row["닉네임"], row["관람일"])
-                review_comments = comment_df[
-                    (comment_df["공연 제목"] == review_key[0]) &
-                    (comment_df["리뷰 닉네임"] == review_key[1]) &
-                    (comment_df["관람일"] == review_key[2])
-                ]
 
-                if not review_comments.empty:
-                    for _, c in review_comments.iterrows():
-                        st.markdown(f"🗨️ **{c['댓글 닉네임']}** ({c['작성일']})  \n{c['댓글 내용']}")
-                else:
-                    st.markdown("*아직 댓글이 없습니다.*")
-
-                # 댓글 입력 폼
-                with st.form(f"댓글폼_{idx}"):
-                    comment_nick = st.text_input("닉네임", key=f"comment_nick_{idx}")
-                    comment_text = st.text_area("댓글 내용", key=f"comment_text_{idx}")
-                    submit_comment = st.form_submit_button("💬 댓글 달기")
-
-                    if submit_comment:
-                        if not comment_nick or not comment_text:
-                            st.warning("닉네임과 댓글 내용을 모두 입력해주세요.")
-                        else:
-                            try:
-                                comment_sheet.append_row([
-                                    row["공연 제목"],
-                                    row["닉네임"],
-                                    row["관람일"],
-                                    comment_nick,
-                                    comment_text,
-                                    str(date.today())
-                                ])
-                                st.success("✅ 댓글이 등록되었습니다!")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"❌ 댓글 저장 실패: {e}")
     except Exception as e:
         st.error(f"❌ 리뷰 불러오기 실패: {e}")
 
@@ -180,7 +121,7 @@ with tab3:
     st.header("🛠 리뷰 수정 또는 삭제")
 
     try:
-        client, sheet = connect_to_sheet()
+        sheet = connect_to_sheet()
         records = sheet.get_all_records()
         df = pd.DataFrame(records)
 
