@@ -133,7 +133,26 @@ with tab2:
         # 리뷰 반복 출력
         for idx, row in filtered.iterrows():
             likes = int(row.get("좋아요", 0) or 0)
-            expander_title = f"⭐ {row['별점']} | ❤️ {likes} | **{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
+
+            # 🔽 댓글 수 가져오기
+            review_key = (row["공연 제목"], row["닉네임"], row["관람일"])
+            try:
+                review_comments = comment_df[
+                    (comment_df["공연 제목"] == review_key[0]) &
+                    (comment_df["리뷰 닉네임"] == review_key[1]) &
+                    (comment_df["관람일"] == review_key[2])
+                ]
+            except KeyError as e:
+                st.error(f"댓글 불러오기 실패: {e}")
+                review_comments = pd.DataFrame()
+
+            num_comments = review_comments.shape[0]
+
+            # ⬇️ 댓글 수 포함한 expander 제목
+            expander_title = (
+                f"⭐ {row['별점']} | ❤️ {likes} | 💬 {num_comments} | "
+                f"**{row['닉네임']}** | {row['관람일']}  \n👉 **_{row['한줄평']}_**"
+            )
 
             with st.expander(expander_title):
                 # 리뷰 본문
@@ -163,17 +182,6 @@ with tab2:
 
                 # 🔽 댓글 표시
                 st.markdown("#### 💬 댓글")
-                review_key = (row["공연 제목"], row["닉네임"], row["관람일"])
-                try:
-                    review_comments = comment_df[
-                        (comment_df["공연 제목"] == review_key[0]) &
-                        (comment_df["리뷰 닉네임"] == review_key[1]) &
-                        (comment_df["관람일"] == review_key[2])
-                    ]
-                except KeyError as e:
-                    st.error(f"댓글 불러오기 실패: {e}")
-                    review_comments = pd.DataFrame()
-
                 if not review_comments.empty:
                     for i, c in review_comments.iterrows():
                         render_comment_with_actions(c, i, comment_sheet)
@@ -206,7 +214,6 @@ with tab2:
 
     except Exception as e:
         st.error(f"❌ 리뷰 불러오기 실패: {e}")
-
 # ─────────────────────
 # 탭 3: Google Sheet 기반 수정/삭제
 # ─────────────────────
